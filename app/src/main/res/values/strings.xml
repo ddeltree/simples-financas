@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<string name="app_name">Simples Finanças</string>
+	<string name="tagline">Finanças como tarefas</string>
+	<string name="loading">Abrindo suas finanças…</string>
+
+	<!-- Estado vazio -->
+	<string name="empty_title">Seu mês ainda está em branco</string>
+	<string name="empty_body">Cadastre o que entra e o que sai como tarefas. Marcar uma receita como concluída aumenta o orçamento do mês; marcar uma despesa subtrai dele.</string>
+	<string name="empty_first_expense">Cadastrar primeira despesa</string>
+	<string name="empty_first_income">Cadastrar uma receita</string>
+	<string name="empty_seed">Começar com exemplos</string>
+
+	<!-- Orçamento do mês -->
+	<string name="budget_of">Orçamento de %1$s</string>
+	<string name="available_hint">disponível agora — o que já entrou menos o que já foi pago</string>
+	<string name="tasks_progress">%1$d de %2$d tarefas</string>
+	<string name="percent">%1$d%%</string>
+	<string name="projected_label">Fim do mês previsto:</string>
+	<string name="stat_received">Recebido</string>
+	<string name="stat_to_receive">A receber</string>
+	<string name="stat_paid">Pago</string>
+	<string name="stat_to_pay">A pagar</string>
+
+	<!-- Listas -->
+	<string name="list_income">Receitas</string>
+	<string name="list_expense">Despesas</string>
+	<string name="list_empty">nada por aqui ainda</string>
+	<plurals name="pending_of">
+		<item quantity="one">%1$d pendente de %2$d</item>
+		<item quantity="other">%1$d pendentes de %2$d</item>
+	</plurals>
+	<string name="new_income">Nova receita</string>
+	<string name="new_expense">Nova despesa</string>
+	<string name="cd_complete">Concluir %1$s</string>
+	<string name="cd_edit">Editar %1$s</string>
+	<string name="badge_recurring">todo mês</string>
+	<string name="badge_adjusted">valor ajustado neste mês</string>
+	<string name="overdue_hint">Venceu e continua pendente</string>
+
+	<!-- Navegação de mês -->
+	<string name="cd_previous_month">Mês anterior</string>
+	<string name="cd_next_month">Próximo mês</string>
+	<string name="today">Hoje</string>
+
+	<!-- Apagar tudo -->
+	<string name="reset_ask">Apagar tudo e recomeçar?</string>
+	<string name="reset_yes">Sim, apagar</string>
+	<string name="reset_all">Apagar todos os dados</string>
+	<string name="cancel">Cancelar</string>
+
+	<!-- Conta -->
+	<string name="sign_out">Sair</string>
+
+	<!-- Tela de trava -->
+	<string name="lock_hint_signin">Entre para ver o orçamento deste mês.</string>
+	<string name="lock_hint_register">Crie uma conta neste dispositivo para guardar suas tarefas.</string>
+	<string name="tab_signin">Entrar</string>
+	<string name="tab_register">Criar conta</string>
+	<string name="field_name">Nome</string>
+	<string name="field_password">Senha</string>
+	<string name="password_hint">Mínimo de %1$d caracteres</string>
+	<string name="remember_me">Manter conectado neste dispositivo</string>
+	<string name="submitting">Só um instante…</string>
+	<string name="submit_signin">Entrar</string>
+	<string name="submit_register">Criar conta e entrar</string>
+	<string name="lock_footer">A senha fica só neste dispositivo e nunca sai dele. Ela tranca o app contra quem pega o aparelho — não protege os dados de quem consegue ler o armazenamento interno.</string>
+
+	<!-- Diálogo de tarefa -->
+	<string name="dialog_edit_kicker">Editar tarefa</string>
+	<string name="dialog_new_kicker">Nova tarefa</string>
+	<string name="dialog_new_title">O que entra ou sai do mês?</string>
+	<string name="cd_close">Fechar</string>
+	<string name="field_kind">Tipo</string>
+	<string name="field_kind_a11y">Tipo da tarefa</string>
+	<string name="kind_income">Receita</string>
+	<string name="kind_expense">Despesa</string>
+	<string name="field_description">Descrição</string>
+	<string name="placeholder_income">Salário</string>
+	<string name="placeholder_expense">Aluguel</string>
+	<string name="field_amount">Valor</string>
+	<string name="currency_prefix">R$</string>
+	<string name="amount_placeholder">0,00</string>
+	<string name="field_day">Dia</string>
+	<string name="field_recurrence">Repetição</string>
+	<string name="recurrence_monthly">Todo mês</string>
+	<string name="recurrence_once">Só em %1$s</string>
+	<string name="field_scope">O novo valor vale para</string>
+	<string name="field_scope_a11y">Alcance do novo valor</string>
+	<string name="scope_all">Todos os meses</string>
+	<string name="scope_month">Só %1$s</string>
+	<string name="error_title">Dê um nome para a tarefa.</string>
+	<string name="error_amount">Informe um valor maior que zero.</string>
+	<string name="error_day">O dia precisa estar entre 1 e 31.</string>
+	<string name="delete_ask">Como quer remover?</string>
+	<string name="delete_end_after">Encerrar depois de %1$s</string>
+	<string name="delete_all_months">Excluir de todos os meses</string>
+	<string name="remove">Remover</string>
+	<string name="save">Salvar</string>
+</resources>
