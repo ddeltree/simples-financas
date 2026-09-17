@@ -16,7 +16,7 @@ class MainActivity : ComponentActivity() {
 
 		setContent {
 			SimplesFinancasTheme {
-				AppRoot(financeStore = container.financeStore)
+				AppRoot(authStore = container.authStore, financeStore = container.financeStore)
 			}
 		}
 	}
