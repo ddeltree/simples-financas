@@ -101,12 +101,21 @@ private fun TaskRow(
 	) {
 		DoneToggle(occurrence, onToggle)
 
-		// O dia vira pílula coral quando venceu e continua pendente.
+		// O dia vira pílula coral quando venceu e continua pendente. No web o motivo vinha
+		// num `title`; aqui vai na semântica, que é onde o leitor de tela o encontra.
+		val overdueHint = stringResource(R.string.overdue_hint)
 		Box(
 			modifier = Modifier
 				.width(36.dp)
 				.clip(RoundedCornerShape(8.dp))
 				.background(if (overdue) colors.coralSoft else colors.chipBg)
+				.then(
+					if (overdue) {
+						Modifier.semantics { contentDescription = overdueHint }
+					} else {
+						Modifier
+					},
+				)
 				.padding(vertical = 4.dp),
 			contentAlignment = Alignment.Center,
 		) {
