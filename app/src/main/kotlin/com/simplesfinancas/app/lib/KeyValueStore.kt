@@ -27,12 +27,4 @@ class KeyValueStore(private val dataStore: DataStore<Preferences>) {
 			// Armazenamento cheio ou indisponível: o estado em memória segue valendo.
 		}
 	}
-
-	suspend fun remove(key: String) {
-		try {
-			dataStore.edit { it.remove(stringPreferencesKey(key)) }
-		} catch (_: IOException) {
-			// Nada a fazer; quem chamou já limpou o estado em memória.
-		}
-	}
 }

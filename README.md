@@ -3,7 +3,7 @@
 App Android de finanças pessoais que trata receitas e despesas como **tarefas mensais**.
 Concluir uma receita soma ao orçamento do mês; concluir uma despesa subtrai dele.
 
-Kotlin + Jetpack Compose, tudo no aparelho: contas locais com senha, nenhum servidor.
+Kotlin + Jetpack Compose, tudo no aparelho: nenhum servidor.
 
 ## Rodando
 
@@ -28,9 +28,5 @@ O usuário cadastra **modelos** de tarefa ("Aluguel, R$ 1.500, todo dia 10"). As
 mês não são gravadas: são derivadas do modelo na hora de mostrar o mês. Por isso dá para
 navegar para qualquer mês, passado ou futuro, sem gerar nada antes. O que fica gravado por
 ocorrência é só o que o usuário mexeu — se concluiu e um eventual ajuste de valor daquele mês.
-
-Cada conta tem sua própria gaveta no armazenamento local; a autenticação usa PBKDF2-SHA256 com
-salt por conta e a senha nunca é guardada em texto. A trava protege contra quem pega o
-aparelho, não cifra os dados em repouso.
 
 Detalhes de arquitetura, invariantes e convenções estão no [CLAUDE.md](./CLAUDE.md).

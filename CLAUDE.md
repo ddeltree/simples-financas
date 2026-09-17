@@ -27,9 +27,8 @@ export JAVA_HOME=~/.jdks/jdk-21.0.12.1+1
 
 **Não há TDD aqui** — Davi optou explicitamente por não trabalhar test-first. O que existe é
 `app/src/test/kotlin/.../ParityTest.kt`, escrito depois do port para travar as regras que não
-podiam mudar (parsing de dinheiro, `clampDay`, derivação de ocorrências, formato do JSON,
-round-trip do PBKDF2). Para experimentar lógica de domínio rapidamente, escreva um teste JUnit
-novo ali: as camadas `domain/` e `lib/` são Kotlin puro e rodam sem emulador.
+podiam mudar (parsing de dinheiro, `clampDay`, derivação de ocorrências, formato do JSON).
+Para experimentar lógica de domínio rapidamente, escreva um teste JUnit novo ali: as camadas `domain/` e `lib/` são Kotlin puro e rodam sem emulador.
 
 ## Arquitetura
 
@@ -55,53 +54,17 @@ concluído; `deleteTemplate` apaga o modelo **e** todas as ocorrências dele.
 | `domain/Types.kt` | Vocabulário: `TaskTemplate`, `Occurrence`, `MonthSummary`, `MonthView` |
 | `domain/Ledger.kt` | Derivação de ocorrências + cálculo do orçamento. Puro, sem Compose |
 | `store/FinanceStore.kt` | Estado financeiro (`StateFlow`) + persistência + ações mutadoras |
-| `domain/auth/*` | Regra de autenticação: `Types`, `Ports` (interfaces) e `AuthService` |
-| `auth/*` | Adaptadores das portas (JCA/PBKDF2, DataStore) + `Container.kt` |
-| `store/AuthStore.kt`, `store/SessionBridge.kt` | Sessão na UI e ligação com a store financeira |
+| `AppContainer.kt` | Composition root: monta armazenamento e stores uma vez só |
 | `lib/Month.kt`, `lib/Money.kt` | `MonthKey` e centavos (ver invariantes abaixo) |
 | `lib/KeyValueStore.kt`, `lib/Json.kt` | O "localStorage" do app e o `Json` compartilhado |
 | `ui/*` | Compose sem estado de negócio; chamam as ações das stores direto |
-| `ui/AppRoot.kt` | Porteiro (`LoadingShell`/`LockScreen`/`Dashboard`) e composição da tela |
+| `ui/AppRoot.kt` | `Dashboard` e a composição da tela |
 | `ui/theme/*` | A identidade visual (paleta, fontes, `islandShell`, fundo) |
 
-### Autenticação é local e depende só de interfaces
+### O estado mora numa chave só
 
-Contas moram no aparelho: o usuário cria nome + senha, o app fica trancado até ele entrar. Não
-há servidor. O desenho é intencionalmente invertido — `AuthService`
-(`domain/auth/AuthService.kt`) é Kotlin puro e recebe **portas** pelo construtor
-(`domain/auth/Ports.kt`): `PasswordHasher`, `AccountReader`, `AccountWriter`, `SessionStore`,
-`Clock`, `IdGenerator`. Ele não sabe o que é PBKDF2 nem DataStore.
-
-As implementações vivem em `auth/` e são montadas **só** em `auth/Container.kt` (`AppContainer`,
-criado uma vez em `SimplesFinancasApp`). Trocar o hash ou mandar as contas para um backend
-começa e termina nesse arquivo — não mexa nas classes concretas a partir do domínio nem da UI.
-
-Consequências práticas:
-
-- **A senha nunca é comparada em texto.** `Pbkdf2PasswordHasher` usa PBKDF2-SHA256 (210 000
-  iterações, salt por conta) e o digest carrega os próprios parâmetros para continuar
-  verificável se o custo subir depois. A comparação é em tempo constante.
-- **Erros são códigos, não exceções.** `AuthResult<T>` devolve `AuthResult.Err(error)` com
-  `code` e `message` pt-BR já pronta (`AuthErrorCode` em `domain/auth/Types.kt`).
-- **A trava não cifra os dados.** O estado financeiro fica em texto puro no DataStore, só
-  separado por usuário — protege contra quem pega o aparelho, não contra quem lê o
-  armazenamento interno. Cifrar em repouso seria um novo adaptador, sem tocar no domínio.
-- As portas são `suspend` (inclusive `SessionStore`, que na versão web era síncrona): no
-  Android todo armazenamento é assíncrono.
-
-### Cada usuário tem sua gaveta no armazenamento
-
-`FinanceStore` não guarda tudo numa chave só: a chave é `simples-financas:v1:u:<userId>`,
-definida por `setStorageScope(userId | null)`. Com escopo `null` (ninguém logado) a store fica
-vazia e **não grava nada**. As gravações passam por um `Channel` serial, para que a ordem no
-disco seja a ordem das ações.
-
-As duas stores se ignoram de propósito — `FinanceStore` não importa `AuthStore`. Quem liga uma
-na outra é `store/SessionBridge.kt`, acionado uma vez pelo `AppContainer`. Se precisar reagir a
-login/logout em outro lugar, estenda a ponte, não crie um import cruzado.
-
-A chave antiga `simples-financas:v1` (de antes das contas, herdada da versão web) é adotada
-pelo primeiro usuário que abrir uma gaveta vazia e depois removida — `adoptLegacyState`.
+`FinanceStore` grava tudo em `simples-financas:v1`, a mesma chave da versão web. As gravações
+passam por um `Channel` serial, para que a ordem no disco seja a ordem das ações.
 
 ### Invariantes que o código assume
 

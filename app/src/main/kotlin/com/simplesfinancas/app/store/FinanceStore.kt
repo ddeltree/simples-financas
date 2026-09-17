@@ -19,10 +19,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-private const val STORAGE_PREFIX = "simples-financas:v1"
-
-/** Chave usada antes de existirem contas — adotada pelo primeiro usuário que entrar. */
-private const val LEGACY_STORAGE_KEY = STORAGE_PREFIX
+private const val STORAGE_KEY = "simples-financas:v1"
 
 private val EMPTY = FinanceState()
 
@@ -38,19 +35,13 @@ data class TemplateInput(
 	val startMonth: MonthKey,
 )
 
-/**
- * O estado financeiro do usuário logado. Não conhece autenticação: quem aponta a store
- * para a gaveta de alguém é a ponte de sessão, via [setStorageScope].
- */
+/** O estado financeiro do app, gravado numa chave só do armazenamento local. */
 class FinanceStore(
 	private val storage: KeyValueStore,
 	scope: CoroutineScope,
 ) {
 	private val _state = MutableStateFlow(EMPTY)
 	val state: StateFlow<FinanceState> = _state.asStateFlow()
-
-	/** Usuário dono dos dados em memória. `null` = ninguém logado, nada a ler nem gravar. */
-	private var storageScope: String? = null
 
 	private class Write(val key: String, val json: String)
 
@@ -61,52 +52,20 @@ class FinanceStore(
 		scope.launch {
 			for (write in writes) storage.write(write.key, write.json)
 		}
+		scope.launch { _state.value = readStorage() }
 	}
-
-	private fun storageKey(): String? =
-		storageScope?.let { "$STORAGE_PREFIX:u:$it" }
 
 	private fun parseState(raw: String?): FinanceState? {
 		if (raw.isNullOrEmpty()) return null
 		return runCatching { AppJson.decodeFromString<FinanceState>(raw) }.getOrNull()
 	}
 
-	private suspend fun readStorage(): FinanceState {
-		val key = storageKey() ?: return EMPTY
-		return parseState(storage.read(key)) ?: EMPTY
-	}
-
-	/**
-	 * Dados do protótipo pré-contas: o primeiro usuário que abrir uma gaveta vazia herda o
-	 * que estava na chave antiga. Como a chave é removida em seguida, só acontece uma vez.
-	 */
-	private suspend fun adoptLegacyState(key: String): FinanceState? {
-		if (storage.read(key) != null) return null
-
-		val legacy = parseState(storage.read(LEGACY_STORAGE_KEY)) ?: return null
-
-		storage.write(key, AppJson.encodeToString(legacy))
-		storage.remove(LEGACY_STORAGE_KEY)
-		return legacy
-	}
-
-	/**
-	 * Aponta a store para a gaveta de um usuário (ou para lugar nenhum, no logout). Quem
-	 * chama é a ponte de sessão — esta store não conhece autenticação.
-	 */
-	suspend fun setStorageScope(next: String?) {
-		if (storageScope == next) return
-
-		storageScope = next
-
-		val key = storageKey()
-		_state.value = if (key == null) EMPTY else adoptLegacyState(key) ?: readStorage()
-	}
+	private suspend fun readStorage(): FinanceState =
+		parseState(storage.read(STORAGE_KEY)) ?: EMPTY
 
 	private fun setState(next: FinanceState) {
 		_state.value = next
-		val key = storageKey() ?: return
-		writes.trySend(Write(key, AppJson.encodeToString(next)))
+		writes.trySend(Write(STORAGE_KEY, AppJson.encodeToString(next)))
 	}
 
 	fun addTemplate(input: TemplateInput) {

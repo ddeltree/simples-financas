@@ -40,15 +40,10 @@ import com.simplesfinancas.app.R
 import com.simplesfinancas.app.domain.Occurrence
 import com.simplesfinancas.app.domain.TaskKind
 import com.simplesfinancas.app.domain.TaskTemplate
-import com.simplesfinancas.app.domain.auth.AccountSummary
 import com.simplesfinancas.app.domain.buildMonthView
 import com.simplesfinancas.app.lib.currentMonthKey
 import com.simplesfinancas.app.lib.todayIso
-import com.simplesfinancas.app.store.AuthStatus
-import com.simplesfinancas.app.store.AuthStore
 import com.simplesfinancas.app.store.FinanceStore
-import com.simplesfinancas.app.ui.auth.AccountMenu
-import com.simplesfinancas.app.ui.auth.LockScreen
 import com.simplesfinancas.app.ui.theme.AppBackground
 import com.simplesfinancas.app.ui.theme.DisplayFamily
 import com.simplesfinancas.app.ui.theme.IslandKicker
@@ -58,40 +53,11 @@ import com.simplesfinancas.app.ui.theme.islandShell
 import com.simplesfinancas.app.ui.theme.pageWrap
 import com.simplesfinancas.app.ui.theme.riseIn
 
-/**
- * O porteiro: enquanto a sessão é restaurada mostra o esqueleto, sem sessão mostra a
- * trava, e com sessão mostra o painel do mês.
- */
+/** A tela do app: o painel do mês. */
 @Composable
-fun AppRoot(authStore: AuthStore, financeStore: FinanceStore) {
-	val auth by authStore.state.collectAsStateWithLifecycle()
-
+fun AppRoot(financeStore: FinanceStore) {
 	AppBackground {
-		when {
-			auth.status == AuthStatus.LOADING -> LoadingShell()
-			auth.user == null -> LockScreen(authStore)
-			else -> Dashboard(
-				user = requireNotNull(auth.user),
-				store = financeStore,
-				onSignOut = authStore::signOut,
-			)
-		}
-	}
-}
-
-@Composable
-private fun LoadingShell() {
-	val colors = islandColors
-	Box(
-		modifier = Modifier.fillMaxSize().systemBarsPadding(),
-		contentAlignment = Alignment.Center,
-	) {
-		Text(
-			text = stringResource(R.string.loading),
-			color = colors.inkSoft,
-			fontFamily = SansFamily,
-			fontSize = 14.sp,
-		)
+		Dashboard(store = financeStore)
 	}
 }
 
@@ -171,7 +137,7 @@ private fun EmptyState(onCreate: (TaskKind) -> Unit, onSeed: () -> Unit) {
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun Dashboard(user: AccountSummary, store: FinanceStore, onSignOut: () -> Unit) {
+private fun Dashboard(store: FinanceStore) {
 	val colors = islandColors
 	val state by store.state.collectAsStateWithLifecycle()
 
@@ -211,7 +177,6 @@ private fun Dashboard(user: AccountSummary, store: FinanceStore, onSignOut: () -
 				horizontalArrangement = Arrangement.spacedBy(12.dp),
 				verticalArrangement = Arrangement.spacedBy(12.dp),
 			) {
-				AccountMenu(user = user, onSignOut = onSignOut)
 				MonthNav(month = month, onChange = { month = it })
 			}
 		}

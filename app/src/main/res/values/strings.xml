@@ -2,7 +2,6 @@
 <resources>
 	<string name="app_name">Simples Finanças</string>
 	<string name="tagline">Finanças como tarefas</string>
-	<string name="loading">Abrindo suas finanças…</string>
 
 	<!-- Estado vazio -->
 	<string name="empty_title">Seu mês ainda está em branco</string>
@@ -48,23 +47,6 @@
 	<string name="reset_yes">Sim, apagar</string>
 	<string name="reset_all">Apagar todos os dados</string>
 	<string name="cancel">Cancelar</string>
-
-	<!-- Conta -->
-	<string name="sign_out">Sair</string>
-
-	<!-- Tela de trava -->
-	<string name="lock_hint_signin">Entre para ver o orçamento deste mês.</string>
-	<string name="lock_hint_register">Crie uma conta neste dispositivo para guardar suas tarefas.</string>
-	<string name="tab_signin">Entrar</string>
-	<string name="tab_register">Criar conta</string>
-	<string name="field_name">Nome</string>
-	<string name="field_password">Senha</string>
-	<string name="password_hint">Mínimo de %1$d caracteres</string>
-	<string name="remember_me">Manter conectado neste dispositivo</string>
-	<string name="submitting">Só um instante…</string>
-	<string name="submit_signin">Entrar</string>
-	<string name="submit_register">Criar conta e entrar</string>
-	<string name="lock_footer">A senha fica só neste dispositivo e nunca sai dele. Ela tranca o app contra quem pega o aparelho — não protege os dados de quem consegue ler o armazenamento interno.</string>
 
 	<!-- Diálogo de tarefa -->
 	<string name="dialog_edit_kicker">Editar tarefa</string>
