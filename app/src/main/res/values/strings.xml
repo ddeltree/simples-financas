@@ -12,6 +12,7 @@
 	<string name="empty_seed">Começar com exemplos</string>
 
 	<!-- Orçamento do mês -->
+	<string name="montante_label">Montante</string>
 	<string name="budget_of">Orçamento de %1$s</string>
 	<string name="available_hint">disponível agora — o que já entrou menos o que já foi pago</string>
 	<string name="tasks_progress">%1$d de %2$d tarefas</string>

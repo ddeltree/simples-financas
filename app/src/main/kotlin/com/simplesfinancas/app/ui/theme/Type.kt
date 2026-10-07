@@ -8,14 +8,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.simplesfinancas.app.R
 
-/** `--font-display: 'Fraunces'` — títulos e números. */
-val DisplayFamily = FontFamily(
-	Font(R.font.fraunces_medium, FontWeight.Medium),
-	Font(R.font.fraunces_bold, FontWeight.Bold),
-	Font(R.font.fraunces_bold, FontWeight.SemiBold),
-)
-
-/** `--font-sans: 'Manrope'` — todo o resto. */
+/** `--font-sans: 'Manrope'` */
 val SansFamily = FontFamily(
 	Font(R.font.manrope_regular, FontWeight.Normal),
 	Font(R.font.manrope_medium, FontWeight.Medium),
@@ -23,6 +16,9 @@ val SansFamily = FontFamily(
 	Font(R.font.manrope_bold, FontWeight.Bold),
 	Font(R.font.manrope_extrabold, FontWeight.ExtraBold),
 )
+
+/** Títulos e números em tipografia limpa sans-serif. */
+val DisplayFamily: FontFamily = SansFamily
 
 private val bodyBase = TextStyle(fontFamily = SansFamily)
 

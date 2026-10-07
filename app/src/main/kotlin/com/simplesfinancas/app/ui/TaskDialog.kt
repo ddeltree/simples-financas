@@ -176,21 +176,16 @@ fun TaskDialog(
 				modifier = Modifier.fillMaxWidth(),
 				horizontalArrangement = Arrangement.SpaceBetween,
 			) {
-				Column(modifier = Modifier.weight(1f)) {
-					IslandKicker(
-						stringResource(
-							if (isEdit) R.string.dialog_edit_kicker else R.string.dialog_new_kicker,
-						),
-					)
-					Text(
-						text = occurrence?.title ?: stringResource(R.string.dialog_new_title),
-						modifier = Modifier.padding(top = 4.dp),
-						color = colors.ink,
-						fontFamily = DisplayFamily,
-						fontWeight = FontWeight.SemiBold,
-						fontSize = 24.sp,
-					)
-				}
+				Text(
+					text = stringResource(
+						if (isEdit) R.string.dialog_edit_kicker else R.string.dialog_new_kicker,
+					),
+					color = colors.ink,
+					fontFamily = DisplayFamily,
+					fontWeight = FontWeight.SemiBold,
+					fontSize = 18.sp,
+					modifier = Modifier.weight(1f),
+				)
 
 				CircleIconButton(
 					icon = Icons.Filled.Close,

@@ -28,6 +28,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.contentDescription
@@ -258,21 +259,16 @@ fun <T> SegmentedControl(
 			Box(
 				modifier = Modifier
 					.weight(1f)
-					.chipSurface(
-						colors = colors,
-						borderColor = if (active) colors.lagoonDeep else colors.line,
-					)
-					.background(
-						if (active) colors.palmSoft else Color.Transparent,
-						RoundedCornerShape(12.dp),
-					)
+					.clip(RoundedCornerShape(8.dp))
+					.background(if (active) colors.ink else colors.chipBg)
+					.border(1.dp, if (active) colors.ink else colors.line, RoundedCornerShape(8.dp))
 					.clickableRipple { onChange(optionValue) }
-					.padding(horizontal = 12.dp, vertical = 10.dp),
+					.padding(horizontal = 12.dp, vertical = 9.dp),
 				contentAlignment = Alignment.Center,
 			) {
 				Text(
 					text = optionLabel,
-					color = if (active) colors.ink else colors.inkSoft,
+					color = if (active) colors.foam else colors.inkSoft,
 					fontFamily = SansFamily,
 					fontWeight = FontWeight.SemiBold,
 					fontSize = 14.sp,

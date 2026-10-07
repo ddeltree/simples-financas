@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -35,21 +34,22 @@ fun MonthNav(month: MonthKey, onChange: (MonthKey) -> Unit, modifier: Modifier =
 	Row(
 		modifier = modifier,
 		verticalAlignment = Alignment.CenterVertically,
-		horizontalArrangement = Arrangement.spacedBy(4.dp),
+		horizontalArrangement = Arrangement.Center,
 	) {
 		CircleIconButton(
 			icon = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
 			contentDescription = stringResource(R.string.cd_previous_month),
 			onClick = { onChange(addMonths(month, -1)) },
+			size = 32.dp,
 		)
 
-		Box(modifier = Modifier.widthIn(min = 160.dp), contentAlignment = Alignment.Center) {
+		Box(modifier = Modifier.padding(horizontal = 8.dp), contentAlignment = Alignment.Center) {
 			Text(
 				text = formatMonthLabel(month),
 				color = colors.ink,
 				fontFamily = DisplayFamily,
 				fontWeight = FontWeight.SemiBold,
-				fontSize = 18.sp,
+				fontSize = 16.sp,
 				textAlign = TextAlign.Center,
 				maxLines = 1,
 			)
@@ -59,23 +59,23 @@ fun MonthNav(month: MonthKey, onChange: (MonthKey) -> Unit, modifier: Modifier =
 			icon = Icons.AutoMirrored.Filled.KeyboardArrowRight,
 			contentDescription = stringResource(R.string.cd_next_month),
 			onClick = { onChange(addMonths(month, 1)) },
+			size = 32.dp,
 		)
 
-		// O web esconde o botão no mês corrente (`disabled:opacity-0`) sem tirar o espaço.
 		if (!isCurrent) {
 			Box(
 				modifier = Modifier
 					.padding(start = 8.dp)
-					.chipSurface(colors, corner = 999.dp)
+					.chipSurface(colors, corner = 6.dp)
 					.clickableRipple { onChange(currentMonthKey()) }
-					.padding(horizontal = 12.dp, vertical = 6.dp),
+					.padding(horizontal = 8.dp, vertical = 4.dp),
 			) {
 				Text(
 					text = stringResource(R.string.today),
 					color = colors.inkSoft,
 					fontFamily = SansFamily,
-					fontWeight = FontWeight.SemiBold,
-					fontSize = 12.sp,
+					fontWeight = FontWeight.Medium,
+					fontSize = 11.sp,
 				)
 			}
 		}

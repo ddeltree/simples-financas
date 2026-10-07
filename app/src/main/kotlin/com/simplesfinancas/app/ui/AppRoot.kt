@@ -1,25 +1,16 @@
 package com.simplesfinancas.app.ui
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountBalanceWallet
-import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -51,7 +42,6 @@ import com.simplesfinancas.app.ui.auth.AccountMenu
 import com.simplesfinancas.app.ui.auth.LockScreen
 import com.simplesfinancas.app.ui.theme.AppBackground
 import com.simplesfinancas.app.ui.theme.DisplayFamily
-import com.simplesfinancas.app.ui.theme.IslandKicker
 import com.simplesfinancas.app.ui.theme.SansFamily
 import com.simplesfinancas.app.ui.theme.islandColors
 import com.simplesfinancas.app.ui.theme.islandShell
@@ -103,30 +93,15 @@ private fun EmptyState(onCreate: (TaskKind) -> Unit, onSeed: () -> Unit) {
 		modifier = Modifier
 			.fillMaxWidth()
 			.islandShell(colors)
-			.padding(32.dp),
+			.padding(horizontal = 24.dp, vertical = 28.dp),
 		horizontalAlignment = Alignment.CenterHorizontally,
 	) {
-		Box(
-			modifier = Modifier
-				.size(56.dp)
-				.background(colors.palmSoft, RoundedCornerShape(16.dp)),
-			contentAlignment = Alignment.Center,
-		) {
-			Icon(
-				Icons.Filled.AccountBalanceWallet,
-				contentDescription = null,
-				tint = colors.palm,
-				modifier = Modifier.size(28.dp),
-			)
-		}
-
 		Text(
 			text = stringResource(R.string.empty_title),
-			modifier = Modifier.padding(top = 20.dp),
 			color = colors.ink,
 			fontFamily = DisplayFamily,
 			fontWeight = FontWeight.SemiBold,
-			fontSize = 24.sp,
+			fontSize = 18.sp,
 			textAlign = TextAlign.Center,
 		)
 
@@ -135,41 +110,33 @@ private fun EmptyState(onCreate: (TaskKind) -> Unit, onSeed: () -> Unit) {
 			modifier = Modifier.padding(top = 8.dp),
 			color = colors.inkSoft,
 			fontFamily = SansFamily,
-			fontSize = 15.sp,
+			fontSize = 14.sp,
 			textAlign = TextAlign.Center,
 		)
 
 		Column(
-			modifier = Modifier.padding(top = 24.dp).fillMaxWidth(),
-			verticalArrangement = Arrangement.spacedBy(12.dp),
+			modifier = Modifier.padding(top = 20.dp).fillMaxWidth(),
+			verticalArrangement = Arrangement.spacedBy(10.dp),
 			horizontalAlignment = Alignment.CenterHorizontally,
 		) {
 			PrimaryButton(
-				text = stringResource(R.string.empty_first_expense),
-				onClick = { onCreate(TaskKind.EXPENSE) },
+				text = stringResource(R.string.empty_first_income),
+				onClick = { onCreate(TaskKind.INCOME) },
 				modifier = Modifier.fillMaxWidth(),
 			)
 			SecondaryButton(
-				text = stringResource(R.string.empty_first_income),
-				onClick = { onCreate(TaskKind.INCOME) },
+				text = stringResource(R.string.empty_first_expense),
+				onClick = { onCreate(TaskKind.EXPENSE) },
 				modifier = Modifier.fillMaxWidth(),
 			)
 			QuietButton(
 				text = stringResource(R.string.empty_seed),
 				onClick = onSeed,
-				leading = {
-					Icon(
-						Icons.Filled.AutoAwesome,
-						contentDescription = null,
-						modifier = Modifier.size(16.dp),
-					)
-				},
 			)
 		}
 	}
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun Dashboard(user: AccountSummary, store: FinanceStore, onSignOut: () -> Unit) {
 	val colors = islandColors
@@ -193,28 +160,32 @@ private fun Dashboard(user: AccountSummary, store: FinanceStore, onSignOut: () -
 			.imePadding()
 			.verticalScroll(rememberScrollState())
 			.pageWrap()
-			.padding(horizontal = 16.dp, vertical = 24.dp),
-		verticalArrangement = Arrangement.spacedBy(20.dp),
+			.padding(horizontal = 16.dp, vertical = 20.dp),
+		verticalArrangement = Arrangement.spacedBy(16.dp),
 	) {
-		Column(modifier = Modifier.riseIn()) {
-			IslandKicker(stringResource(R.string.tagline))
+		Row(
+			modifier = Modifier
+				.fillMaxWidth()
+				.riseIn(),
+			horizontalArrangement = Arrangement.SpaceBetween,
+			verticalAlignment = Alignment.CenterVertically,
+		) {
 			Text(
 				text = stringResource(R.string.app_name),
 				color = colors.ink,
 				fontFamily = DisplayFamily,
 				fontWeight = FontWeight.Bold,
-				fontSize = 30.sp,
+				fontSize = 20.sp,
 			)
 
-			FlowRow(
-				modifier = Modifier.padding(top = 16.dp).fillMaxWidth(),
-				horizontalArrangement = Arrangement.spacedBy(12.dp),
-				verticalArrangement = Arrangement.spacedBy(12.dp),
-			) {
-				AccountMenu(user = user, onSignOut = onSignOut)
-				MonthNav(month = month, onChange = { month = it })
-			}
+			AccountMenu(user = user, onSignOut = onSignOut)
 		}
+
+		MonthNav(
+			month = month,
+			onChange = { month = it },
+			modifier = Modifier.fillMaxWidth().riseIn(delayMillis = 50),
+		)
 
 		if (isEmpty) {
 			EmptyState(
@@ -247,8 +218,8 @@ private fun Dashboard(user: AccountSummary, store: FinanceStore, onSignOut: () -
 			)
 
 			Row(
-				modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
-				horizontalArrangement = Arrangement.End,
+				modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 16.dp),
+				horizontalArrangement = Arrangement.Center,
 				verticalAlignment = Alignment.CenterVertically,
 			) {
 				if (confirmingReset) {

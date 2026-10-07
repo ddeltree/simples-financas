@@ -101,25 +101,12 @@ fun LockScreen(authStore: AuthStore) {
 				.islandShell(colors)
 				.padding(28.dp),
 		) {
-			Box(
-				modifier = Modifier.size(48.dp).background(colors.palmSoft, RoundedCornerShape(16.dp)),
-				contentAlignment = Alignment.Center,
-			) {
-				Icon(
-					Icons.Filled.Lock,
-					contentDescription = null,
-					tint = colors.palm,
-					modifier = Modifier.size(24.dp),
-				)
-			}
-
-			IslandKicker(stringResource(R.string.tagline), Modifier.padding(top = 20.dp))
 			Text(
 				text = stringResource(R.string.app_name),
 				color = colors.ink,
 				fontFamily = DisplayFamily,
 				fontWeight = FontWeight.Bold,
-				fontSize = 24.sp,
+				fontSize = 22.sp,
 			)
 			Text(
 				text = stringResource(
@@ -129,7 +116,7 @@ fun LockScreen(authStore: AuthStore) {
 						R.string.lock_hint_register
 					},
 				),
-				modifier = Modifier.padding(top = 8.dp),
+				modifier = Modifier.padding(top = 4.dp),
 				color = colors.inkSoft,
 				fontFamily = SansFamily,
 				fontSize = 14.sp,
