@@ -21,7 +21,7 @@ import kotlin.math.abs
 @Composable
 fun BudgetSummary(month: MonthKey, summary: MonthSummary, modifier: Modifier = Modifier) {
 	val colors = islandColors
-	val montante = summary.incomeTotalCents - summary.expenseTotalCents
+	val montante = summary.availableCents
 
 	val formattedMontante = when {
 		montante > 0 -> "+ ${formatBRL(montante)}"
