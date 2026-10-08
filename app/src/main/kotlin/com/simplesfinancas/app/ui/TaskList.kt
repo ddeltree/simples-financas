@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material3.Icon
@@ -109,35 +108,30 @@ private fun TaskRow(
 				textDecoration = if (occurrence.done) TextDecoration.LineThrough else null,
 			)
 
-			Row(
-				modifier = Modifier.padding(top = 2.dp),
-				verticalAlignment = Alignment.CenterVertically,
-				horizontalArrangement = Arrangement.spacedBy(6.dp),
-			) {
-				Text(
-					text = "Dia ${occurrence.day}",
-					color = if (overdue) colors.coral else colors.inkSoft,
-					fontFamily = SansFamily,
-					fontWeight = if (overdue) FontWeight.SemiBold else FontWeight.Normal,
-					fontSize = 12.sp,
-				)
+			if (occurrence.day != null || occurrence.adjusted) {
+				Row(
+					modifier = Modifier.padding(top = 2.dp),
+					verticalAlignment = Alignment.CenterVertically,
+					horizontalArrangement = Arrangement.spacedBy(6.dp),
+				) {
+					if (occurrence.day != null) {
+						Text(
+							text = "Dia ${occurrence.day}",
+							color = if (overdue) colors.coral else colors.inkSoft,
+							fontFamily = SansFamily,
+							fontWeight = if (overdue) FontWeight.SemiBold else FontWeight.Normal,
+							fontSize = 12.sp,
+						)
+					}
 
-				if (occurrence.recurring) {
-					Icon(
-						imageVector = Icons.Filled.Repeat,
-						contentDescription = stringResource(R.string.badge_recurring),
-						tint = colors.inkSoft,
-						modifier = Modifier.size(12.dp),
-					)
-				}
-
-				if (occurrence.adjusted) {
-					Text(
-						text = "• ajustado",
-						color = colors.inkSoft,
-						fontFamily = SansFamily,
-						fontSize = 11.sp,
-					)
+					if (occurrence.adjusted) {
+						Text(
+							text = "• ajustado",
+							color = colors.inkSoft,
+							fontFamily = SansFamily,
+							fontSize = 11.sp,
+						)
+					}
 				}
 			}
 		}
@@ -167,7 +161,6 @@ fun TaskList(
 	today: String?,
 	onToggle: (Occurrence) -> Unit,
 	onEdit: (Occurrence) -> Unit,
-	onAdd: () -> Unit,
 	modifier: Modifier = Modifier,
 ) {
 	val colors = islandColors
@@ -222,39 +215,12 @@ fun TaskList(
 				occurrences.forEach { occurrence ->
 					TaskRow(
 						occurrence = occurrence,
-						overdue = !occurrence.done && today != null && occurrence.date < today,
+						overdue = !occurrence.done && today != null && occurrence.date != null && occurrence.date < today,
 						onToggle = { onToggle(occurrence) },
 						onEdit = { onEdit(occurrence) },
 					)
 				}
 			}
-		}
-
-		Row(
-			modifier = Modifier
-				.padding(top = 8.dp)
-				.fillMaxWidth()
-				.clip(RoundedCornerShape(8.dp))
-				.clickableRipple(onClick = onAdd)
-				.padding(vertical = 10.dp, horizontal = 4.dp),
-			verticalAlignment = Alignment.CenterVertically,
-			horizontalArrangement = Arrangement.spacedBy(6.dp),
-		) {
-			Icon(
-				imageVector = Icons.Filled.Add,
-				contentDescription = null,
-				tint = colors.inkSoft,
-				modifier = Modifier.size(16.dp),
-			)
-			Text(
-				text = stringResource(
-					if (isIncome) R.string.new_income else R.string.new_expense,
-				),
-				color = colors.inkSoft,
-				fontFamily = SansFamily,
-				fontWeight = FontWeight.Medium,
-				fontSize = 13.sp,
-			)
 		}
 	}
 }

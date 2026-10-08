@@ -1,6 +1,7 @@
 package com.simplesfinancas.app.ui
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -10,7 +11,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -19,6 +19,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -44,15 +46,16 @@ import com.simplesfinancas.app.domain.TaskTemplate
 import com.simplesfinancas.app.lib.MonthKey
 import com.simplesfinancas.app.lib.PT_BR
 import com.simplesfinancas.app.lib.centsToInputValue
+import com.simplesfinancas.app.lib.clampDay
 import com.simplesfinancas.app.lib.formatMonthLabel
 import com.simplesfinancas.app.lib.parseAmountToCents
 import com.simplesfinancas.app.store.FinanceStore
 import com.simplesfinancas.app.store.TemplateInput
 import com.simplesfinancas.app.ui.theme.DisplayFamily
-import com.simplesfinancas.app.ui.theme.IslandKicker
 import com.simplesfinancas.app.ui.theme.SansFamily
 import com.simplesfinancas.app.ui.theme.islandColors
 import com.simplesfinancas.app.ui.theme.islandShell
+import java.time.LocalDate
 
 /** Alvo do diálogo: criar uma tarefa nova ou editar a ocorrência aberta. */
 sealed interface TaskEditor {
@@ -80,11 +83,10 @@ fun TaskDialog(
 	var amount by remember {
 		mutableStateOf(occurrence?.let { centsToInputValue(it.amountCents) } ?: "")
 	}
-	var day by remember { mutableStateOf((occurrence?.day ?: 5).toString()) }
+	var day by remember { mutableStateOf(occurrence?.day?.toString() ?: "") }
 	var recurring by remember { mutableStateOf(occurrence?.recurring ?: true) }
-	var scope by remember {
-		mutableStateOf(if (occurrence?.adjusted == true) Scope.MONTH else Scope.ALL)
-	}
+	var scope by remember { mutableStateOf(Scope.ALL) }
+	var showOptions by remember { mutableStateOf(false) }
 	var error by remember { mutableStateOf<String?>(null) }
 	var confirmingDelete by remember { mutableStateOf(false) }
 
@@ -108,10 +110,15 @@ fun TaskDialog(
 			return
 		}
 
-		val dayOfMonth = day.trim().toIntOrNull()
-		if (dayOfMonth == null || dayOfMonth < 1 || dayOfMonth > 31) {
-			error = errorDay
-			return
+		val dayOfMonth = if (day.trim().isEmpty()) {
+			null
+		} else {
+			val parsed = day.trim().toIntOrNull()
+			if (parsed == null || parsed !in 1..31) {
+				error = errorDay
+				return
+			}
+			clampDay(month, parsed)
 		}
 
 		val recurrence = if (recurring) {
@@ -134,7 +141,6 @@ fun TaskDialog(
 			return
 		}
 
-		// Trocar o tipo de repetição reancora o modelo no mês que está na tela.
 		val changedRecurrenceType = recurring != (template.recurrence is Recurrence.Monthly)
 
 		store.updateTemplate(
@@ -147,7 +153,6 @@ fun TaskDialog(
 			amountCents = if (scope == Scope.ALL) amountCents else null,
 		)
 
-		// "Só neste mês" grava um ajuste pontual; "todos os meses" limpa o ajuste anterior.
 		store.setOccurrenceAmount(
 			template.id,
 			month,
@@ -166,15 +171,16 @@ fun TaskDialog(
 		Column(
 			modifier = Modifier
 				.padding(16.dp)
-				.widthIn(max = 480.dp)
+				.widthIn(max = 440.dp)
 				.fillMaxWidth()
 				.islandShell(colors)
 				.verticalScroll(rememberScrollState())
-				.padding(24.dp),
+				.padding(20.dp),
 		) {
 			Row(
 				modifier = Modifier.fillMaxWidth(),
 				horizontalArrangement = Arrangement.SpaceBetween,
+				verticalAlignment = Alignment.CenterVertically,
 			) {
 				Text(
 					text = stringResource(
@@ -183,7 +189,7 @@ fun TaskDialog(
 					color = colors.ink,
 					fontFamily = DisplayFamily,
 					fontWeight = FontWeight.SemiBold,
-					fontSize = 18.sp,
+					fontSize = 17.sp,
 					modifier = Modifier.weight(1f),
 				)
 
@@ -191,35 +197,31 @@ fun TaskDialog(
 					icon = Icons.Filled.Close,
 					contentDescription = stringResource(R.string.cd_close),
 					onClick = onClose,
-					size = 32.dp,
+					size = 28.dp,
 					bordered = false,
 				)
 			}
 
 			Column(
-				modifier = Modifier.padding(top = 20.dp),
-				verticalArrangement = Arrangement.spacedBy(16.dp),
+				modifier = Modifier.padding(top = 16.dp),
+				verticalArrangement = Arrangement.spacedBy(14.dp),
 			) {
-				Column {
-					FieldLabel(stringResource(R.string.field_kind))
-					SegmentedControl(
-						value = kind,
-						options = listOf(
-							TaskKind.INCOME to stringResource(R.string.kind_income),
-							TaskKind.EXPENSE to stringResource(R.string.kind_expense),
-						),
-						onChange = { kind = it },
-						label = stringResource(R.string.field_kind_a11y),
-						modifier = Modifier.padding(top = 6.dp),
-					)
-				}
+				SegmentedControl(
+					value = kind,
+					options = listOf(
+						TaskKind.INCOME to stringResource(R.string.kind_income),
+						TaskKind.EXPENSE to stringResource(R.string.kind_expense),
+					),
+					onChange = { kind = it },
+					label = stringResource(R.string.field_kind_a11y),
+				)
 
 				Column {
 					FieldLabel(stringResource(R.string.field_description))
 					IslandTextField(
 						value = title,
 						onValueChange = { title = it },
-						modifier = Modifier.padding(top = 6.dp),
+						modifier = Modifier.padding(top = 4.dp),
 						placeholder = stringResource(
 							if (kind == TaskKind.INCOME) {
 								R.string.placeholder_income
@@ -231,66 +233,83 @@ fun TaskDialog(
 					)
 				}
 
-				Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-					Column(modifier = Modifier.weight(1f)) {
-						FieldLabel(stringResource(R.string.field_amount))
-						IslandTextField(
-							value = amount,
-							onValueChange = { amount = it },
-							modifier = Modifier.padding(top = 6.dp),
-							placeholder = stringResource(R.string.amount_placeholder),
-							prefix = stringResource(R.string.currency_prefix),
-							keyboardOptions = KeyboardOptions(
-								keyboardType = KeyboardType.Decimal,
-								imeAction = ImeAction.Next,
-							),
-						)
-					}
-
-					Column(modifier = Modifier.width(96.dp)) {
-						FieldLabel(stringResource(R.string.field_day))
-						IslandTextField(
-							value = day,
-							onValueChange = { day = it.filter(Char::isDigit).take(2) },
-							modifier = Modifier.padding(top = 6.dp),
-							keyboardOptions = KeyboardOptions(
-								keyboardType = KeyboardType.Number,
-								imeAction = ImeAction.Done,
-							),
-						)
-					}
-				}
-
 				Column {
-					FieldLabel(stringResource(R.string.field_recurrence))
-					SegmentedControl(
-						value = recurring,
-						options = listOf(
-							true to stringResource(R.string.recurrence_monthly),
-							false to stringResource(R.string.recurrence_once, monthName),
+					FieldLabel(stringResource(R.string.field_amount))
+					IslandTextField(
+						value = amount,
+						onValueChange = { amount = it },
+						modifier = Modifier.padding(top = 4.dp),
+						placeholder = stringResource(R.string.amount_placeholder),
+						prefix = stringResource(R.string.currency_prefix),
+						keyboardOptions = KeyboardOptions(
+							keyboardType = KeyboardType.Decimal,
+							imeAction = if (showOptions) ImeAction.Next else ImeAction.Done,
 						),
-						onChange = { recurring = it },
-						label = stringResource(R.string.field_recurrence),
-						modifier = Modifier.padding(top = 6.dp),
 					)
 				}
 
-				if (isEdit && recurring) {
-					Column {
-						FieldLabel(stringResource(R.string.field_scope))
-						SegmentedControl(
-							value = scope,
-							options = listOf(
-								Scope.ALL to stringResource(R.string.scope_all),
-								Scope.MONTH to stringResource(
-									R.string.scope_month,
-									monthName.lowercase(PT_BR),
-								),
-							),
-							onChange = { scope = it },
-							label = stringResource(R.string.field_scope_a11y),
-							modifier = Modifier.padding(top = 6.dp),
+				// Opções colapsáveis (Data, Repetição, Escopo)
+				QuietButton(
+					text = stringResource(if (showOptions) R.string.less_options else R.string.more_options),
+					onClick = { showOptions = !showOptions },
+					fontSize = 13.sp,
+					leading = {
+						Icon(
+							imageVector = if (showOptions) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
+							contentDescription = null,
+							modifier = Modifier.size(16.dp),
 						)
+					},
+				)
+
+				AnimatedVisibility(visible = showOptions) {
+					Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+						Column {
+							FieldLabel(stringResource(R.string.field_day))
+							IslandTextField(
+								value = day,
+								onValueChange = { day = it.filter(Char::isDigit).take(2) },
+								modifier = Modifier.padding(top = 4.dp),
+								placeholder = stringResource(R.string.placeholder_day),
+								keyboardOptions = KeyboardOptions(
+									keyboardType = KeyboardType.Number,
+									imeAction = ImeAction.Done,
+								),
+							)
+						}
+
+						Column {
+							FieldLabel(stringResource(R.string.field_recurrence))
+							SegmentedControl(
+								value = recurring,
+								options = listOf(
+									true to stringResource(R.string.recurrence_monthly),
+									false to stringResource(R.string.recurrence_once, monthName),
+								),
+								onChange = { recurring = it },
+								label = stringResource(R.string.field_recurrence),
+								modifier = Modifier.padding(top = 4.dp),
+							)
+						}
+
+						if (isEdit && recurring) {
+							Column {
+								FieldLabel(stringResource(R.string.field_scope))
+								SegmentedControl(
+									value = scope,
+									options = listOf(
+										Scope.ALL to stringResource(R.string.scope_all),
+										Scope.MONTH to stringResource(
+											R.string.scope_month,
+											monthName.lowercase(PT_BR),
+										),
+									),
+									onChange = { scope = it },
+									label = stringResource(R.string.field_scope_a11y),
+									modifier = Modifier.padding(top = 4.dp),
+								)
+							}
+						}
 					}
 				}
 			}
@@ -298,22 +317,22 @@ fun TaskDialog(
 			error?.let {
 				Text(
 					text = it,
-					modifier = Modifier.padding(top = 16.dp),
+					modifier = Modifier.padding(top = 12.dp),
 					color = colors.coral,
 					fontFamily = SansFamily,
 					fontWeight = FontWeight.Medium,
-					fontSize = 14.sp,
+					fontSize = 13.sp,
 				)
 			}
 
 			if (confirmingDelete && template != null) {
 				Column(
 					modifier = Modifier
-						.padding(top = 20.dp)
+						.padding(top = 16.dp)
 						.fillMaxWidth()
-						.background(colors.coralSoft, RoundedCornerShape(16.dp))
-						.border(1.dp, colors.coral.copy(alpha = 0.4f), RoundedCornerShape(16.dp))
-						.padding(16.dp),
+						.background(colors.coralSoft, RoundedCornerShape(12.dp))
+						.border(1.dp, colors.coral.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
+						.padding(14.dp),
 					verticalArrangement = Arrangement.spacedBy(8.dp),
 				) {
 					Text(
@@ -321,7 +340,7 @@ fun TaskDialog(
 						color = colors.ink,
 						fontFamily = SansFamily,
 						fontWeight = FontWeight.SemiBold,
-						fontSize = 14.sp,
+						fontSize = 13.sp,
 					)
 
 					if (template.recurrence is Recurrence.Monthly) {
@@ -354,7 +373,7 @@ fun TaskDialog(
 				}
 			} else {
 				Row(
-					modifier = Modifier.padding(top = 24.dp).fillMaxWidth(),
+					modifier = Modifier.padding(top = 20.dp).fillMaxWidth(),
 					horizontalArrangement = Arrangement.SpaceBetween,
 					verticalAlignment = Alignment.CenterVertically,
 				) {
@@ -362,6 +381,7 @@ fun TaskDialog(
 						QuietButton(
 							text = stringResource(R.string.remove),
 							onClick = { confirmingDelete = true },
+							color = colors.coral,
 							leading = {
 								Icon(
 									Icons.Filled.Delete,

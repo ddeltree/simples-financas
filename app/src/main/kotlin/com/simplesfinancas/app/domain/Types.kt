@@ -16,17 +16,17 @@ enum class TaskKind {
 
 @Serializable
 sealed interface Recurrence {
-	val dayOfMonth: Int
+	val dayOfMonth: Int?
 
-	/** Repete todo mês no mesmo dia, de `startMonth` até `endMonth` (ou indefinidamente). */
+	/** Repete todo mês, opcionalmente em um dia definido. */
 	@Serializable
 	@SerialName("monthly")
-	data class Monthly(override val dayOfMonth: Int) : Recurrence
+	data class Monthly(override val dayOfMonth: Int? = null) : Recurrence
 
-	/** Acontece uma única vez, no mês de `startMonth`. */
+	/** Acontece uma única vez no mês de startMonth, opcionalmente em um dia definido. */
 	@Serializable
 	@SerialName("once")
-	data class Once(override val dayOfMonth: Int) : Recurrence
+	data class Once(override val dayOfMonth: Int? = null) : Recurrence
 }
 
 /**
@@ -72,8 +72,8 @@ data class Occurrence(
 	val kind: TaskKind,
 	val title: String,
 	val amountCents: Long,
-	val day: Int,
-	val date: String,
+	val day: Int?,
+	val date: String?,
 	val done: Boolean,
 	val doneAt: String?,
 	val recurring: Boolean,

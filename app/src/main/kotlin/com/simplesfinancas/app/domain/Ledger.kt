@@ -23,7 +23,7 @@ private fun toOccurrence(
 ): Occurrence {
 	val stored = state.occurrences[occurrenceKey(template.id, month)]
 	val amountCents = stored?.amountCents ?: template.amountCents
-	val day = clampDay(month, template.recurrence.dayOfMonth)
+	val day = template.recurrence.dayOfMonth?.let { clampDay(month, it) }
 
 	return Occurrence(
 		id = occurrenceKey(template.id, month),
@@ -33,7 +33,7 @@ private fun toOccurrence(
 		title = template.title,
 		amountCents = amountCents,
 		day = day,
-		date = isoDate(month, day),
+		date = day?.let { isoDate(month, it) },
 		done = stored?.done ?: false,
 		doneAt = stored?.doneAt,
 		recurring = template.recurrence is Recurrence.Monthly,
@@ -44,7 +44,7 @@ private fun toOccurrence(
 private val titleCollator: Collator = Collator.getInstance(PT_BR)
 
 private val byDayThenTitle: Comparator<Occurrence> =
-	compareBy<Occurrence> { it.day }.thenBy(titleCollator) { it.title }
+	compareBy<Occurrence, Int?>(nullsLast()) { it.day }.thenBy(titleCollator) { it.title }
 
 private fun sumCents(occurrences: List<Occurrence>): Long =
 	occurrences.sumOf { it.amountCents }

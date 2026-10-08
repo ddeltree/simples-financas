@@ -1,50 +1,53 @@
 package com.simplesfinancas.app.ui
 
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.simplesfinancas.app.R
 import com.simplesfinancas.app.domain.MonthSummary
 import com.simplesfinancas.app.lib.MonthKey
 import com.simplesfinancas.app.lib.formatBRL
 import com.simplesfinancas.app.ui.theme.DisplayFamily
-import com.simplesfinancas.app.ui.theme.SansFamily
 import com.simplesfinancas.app.ui.theme.islandColors
-import com.simplesfinancas.app.ui.theme.islandShell
+import kotlin.math.abs
 
 @Composable
 fun BudgetSummary(month: MonthKey, summary: MonthSummary, modifier: Modifier = Modifier) {
 	val colors = islandColors
 	val montante = summary.incomeTotalCents - summary.expenseTotalCents
 
-	Column(
+	val formattedMontante = when {
+		montante > 0 -> "+ ${formatBRL(montante)}"
+		montante < 0 -> "− ${formatBRL(abs(montante))}"
+		else -> formatBRL(0L)
+	}
+
+	val montanteColor = when {
+		montante > 0 -> colors.palm
+		montante < 0 -> colors.coral
+		else -> colors.ink
+	}
+
+	Box(
 		modifier = modifier
 			.fillMaxWidth()
-			.islandShell(colors)
-			.padding(horizontal = 20.dp, vertical = 20.dp),
+			.padding(vertical = 12.dp),
+		contentAlignment = Alignment.Center,
 	) {
 		Text(
-			text = stringResource(R.string.montante_label),
-			color = colors.inkSoft,
-			fontFamily = SansFamily,
-			fontWeight = FontWeight.Medium,
-			fontSize = 13.sp,
-		)
-
-		Text(
-			text = formatBRL(montante),
-			modifier = Modifier.padding(top = 4.dp),
-			color = if (montante < 0) colors.coral else colors.ink,
+			text = formattedMontante,
+			color = montanteColor,
 			fontFamily = DisplayFamily,
 			fontWeight = FontWeight.Bold,
-			fontSize = 32.sp,
+			fontSize = 42.sp,
+			textAlign = TextAlign.Center,
 		)
 	}
 }

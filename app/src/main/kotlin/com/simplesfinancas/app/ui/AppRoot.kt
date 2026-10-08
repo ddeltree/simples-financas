@@ -1,26 +1,43 @@
 package com.simplesfinancas.app.ui
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -31,57 +48,27 @@ import com.simplesfinancas.app.R
 import com.simplesfinancas.app.domain.Occurrence
 import com.simplesfinancas.app.domain.TaskKind
 import com.simplesfinancas.app.domain.TaskTemplate
-import com.simplesfinancas.app.domain.auth.AccountSummary
 import com.simplesfinancas.app.domain.buildMonthView
+import com.simplesfinancas.app.lib.addMonths
 import com.simplesfinancas.app.lib.currentMonthKey
+import com.simplesfinancas.app.lib.formatMonthLabel
 import com.simplesfinancas.app.lib.todayIso
-import com.simplesfinancas.app.store.AuthStatus
 import com.simplesfinancas.app.store.AuthStore
 import com.simplesfinancas.app.store.FinanceStore
-import com.simplesfinancas.app.ui.auth.AccountMenu
-import com.simplesfinancas.app.ui.auth.LockScreen
 import com.simplesfinancas.app.ui.theme.AppBackground
 import com.simplesfinancas.app.ui.theme.DisplayFamily
 import com.simplesfinancas.app.ui.theme.SansFamily
 import com.simplesfinancas.app.ui.theme.islandColors
 import com.simplesfinancas.app.ui.theme.islandShell
 import com.simplesfinancas.app.ui.theme.pageWrap
-import com.simplesfinancas.app.ui.theme.riseIn
 
-/**
- * O porteiro: enquanto a sessão é restaurada mostra o esqueleto, sem sessão mostra a
- * trava, e com sessão mostra o painel do mês.
- */
 @Composable
-fun AppRoot(authStore: AuthStore, financeStore: FinanceStore) {
-	val auth by authStore.state.collectAsStateWithLifecycle()
-
+fun AppRoot(
+	authStore: AuthStore? = null,
+	financeStore: FinanceStore,
+) {
 	AppBackground {
-		when {
-			auth.status == AuthStatus.LOADING -> LoadingShell()
-			auth.user == null -> LockScreen(authStore)
-			else -> Dashboard(
-				user = requireNotNull(auth.user),
-				store = financeStore,
-				onSignOut = authStore::signOut,
-			)
-		}
-	}
-}
-
-@Composable
-private fun LoadingShell() {
-	val colors = islandColors
-	Box(
-		modifier = Modifier.fillMaxSize().systemBarsPadding(),
-		contentAlignment = Alignment.Center,
-	) {
-		Text(
-			text = stringResource(R.string.loading),
-			color = colors.inkSoft,
-			fontFamily = SansFamily,
-			fontSize = 14.sp,
-		)
+		Dashboard(store = financeStore)
 	}
 }
 
@@ -138,119 +125,133 @@ private fun EmptyState(onCreate: (TaskKind) -> Unit, onSeed: () -> Unit) {
 }
 
 @Composable
-private fun Dashboard(user: AccountSummary, store: FinanceStore, onSignOut: () -> Unit) {
+private fun Dashboard(store: FinanceStore) {
 	val colors = islandColors
 	val state by store.state.collectAsStateWithLifecycle()
 
 	var month by rememberSaveable { mutableStateOf(currentMonthKey()) }
 	var editor by remember { mutableStateOf<TaskEditor?>(null) }
-	var confirmingReset by rememberSaveable { mutableStateOf(false) }
 
-	// Só depois da montagem — "hoje" não existe antes de a tela existir.
 	var today by remember { mutableStateOf<String?>(null) }
 	LaunchedEffect(Unit) { today = todayIso() }
 
-	val view = remember(state, month) { buildMonthView(state, month) }
 	val isEmpty = state.templates.isEmpty()
+	var totalDragX by remember { mutableFloatStateOf(0f) }
 
-	Column(
+	Box(
 		modifier = Modifier
 			.fillMaxSize()
 			.systemBarsPadding()
-			.imePadding()
-			.verticalScroll(rememberScrollState())
-			.pageWrap()
-			.padding(horizontal = 16.dp, vertical = 20.dp),
-		verticalArrangement = Arrangement.spacedBy(16.dp),
+			.imePadding(),
 	) {
-		Row(
+		Column(
 			modifier = Modifier
-				.fillMaxWidth()
-				.riseIn(),
-			horizontalArrangement = Arrangement.SpaceBetween,
-			verticalAlignment = Alignment.CenterVertically,
-		) {
-			Text(
-				text = stringResource(R.string.app_name),
-				color = colors.ink,
-				fontFamily = DisplayFamily,
-				fontWeight = FontWeight.Bold,
-				fontSize = 20.sp,
-			)
-
-			AccountMenu(user = user, onSignOut = onSignOut)
-		}
-
-		MonthNav(
-			month = month,
-			onChange = { month = it },
-			modifier = Modifier.fillMaxWidth().riseIn(delayMillis = 50),
-		)
-
-		if (isEmpty) {
-			EmptyState(
-				onCreate = { kind -> editor = TaskEditor.Create(kind) },
-				onSeed = store::seedExamples,
-			)
-		} else {
-			BudgetSummary(month = month, summary = view.summary)
-
-			TaskList(
-				kind = TaskKind.INCOME,
-				title = stringResource(R.string.list_income),
-				occurrences = view.income,
-				totalCents = view.summary.incomeTotalCents,
-				today = today,
-				onToggle = { store.setOccurrenceDone(it.templateId, month, !it.done) },
-				onEdit = { editor = openEditor(state.templates, it) ?: editor },
-				onAdd = { editor = TaskEditor.Create(TaskKind.INCOME) },
-			)
-
-			TaskList(
-				kind = TaskKind.EXPENSE,
-				title = stringResource(R.string.list_expense),
-				occurrences = view.expense,
-				totalCents = view.summary.expenseTotalCents,
-				today = today,
-				onToggle = { store.setOccurrenceDone(it.templateId, month, !it.done) },
-				onEdit = { editor = openEditor(state.templates, it) ?: editor },
-				onAdd = { editor = TaskEditor.Create(TaskKind.EXPENSE) },
-			)
-
-			Row(
-				modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 16.dp),
-				horizontalArrangement = Arrangement.Center,
-				verticalAlignment = Alignment.CenterVertically,
-			) {
-				if (confirmingReset) {
-					Text(
-						text = stringResource(R.string.reset_ask),
-						color = colors.inkSoft,
-						fontFamily = SansFamily,
-						fontSize = 12.sp,
-					)
-					QuietButton(
-						text = stringResource(R.string.reset_yes),
-						onClick = {
-							store.resetAll()
-							confirmingReset = false
+				.fillMaxSize()
+				.pointerInput(month) {
+					detectHorizontalDragGestures(
+						onDragStart = { totalDragX = 0f },
+						onHorizontalDrag = { _, dragAmount ->
+							totalDragX += dragAmount
 						},
-						color = colors.coral,
-						fontSize = 12.sp,
-					)
-					QuietButton(
-						text = stringResource(R.string.cancel),
-						onClick = { confirmingReset = false },
-						fontSize = 12.sp,
-					)
-				} else {
-					QuietButton(
-						text = stringResource(R.string.reset_all),
-						onClick = { confirmingReset = true },
-						fontSize = 12.sp,
+						onDragEnd = {
+							if (totalDragX < -50f) {
+								month = addMonths(month, 1)
+							} else if (totalDragX > 50f) {
+								month = addMonths(month, -1)
+							}
+						},
 					)
 				}
+				.verticalScroll(rememberScrollState())
+				.pageWrap()
+				.padding(horizontal = 16.dp, vertical = 16.dp),
+		) {
+			AnimatedContent(
+				targetState = month,
+				transitionSpec = {
+					val forward = targetState > initialState
+					val slideIn = slideInHorizontally(
+						animationSpec = tween(durationMillis = 260, easing = FastOutSlowInEasing),
+					) { width -> if (forward) width else -width } + fadeIn(
+						animationSpec = tween(durationMillis = 200),
+					)
+					val slideOut = slideOutHorizontally(
+						animationSpec = tween(durationMillis = 260, easing = FastOutSlowInEasing),
+					) { width -> if (forward) -width else width } + fadeOut(
+						animationSpec = tween(durationMillis = 200),
+					)
+					slideIn togetherWith slideOut
+				},
+				label = "monthTransition",
+			) { currentMonth ->
+				val currentView = remember(state, currentMonth) { buildMonthView(state, currentMonth) }
+
+				Column(
+					modifier = Modifier.fillMaxWidth(),
+					verticalArrangement = Arrangement.spacedBy(16.dp),
+				) {
+					// Mês sutil no topo
+					Text(
+						text = formatMonthLabel(currentMonth),
+						modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+						color = colors.inkSoft,
+						fontFamily = SansFamily,
+						fontWeight = FontWeight.Medium,
+						fontSize = 14.sp,
+						textAlign = TextAlign.Center,
+					)
+
+					// Montante simples e centralizado, com fonte grande e sinal (+ / -)
+					BudgetSummary(month = currentMonth, summary = currentView.summary)
+
+					if (isEmpty) {
+						EmptyState(
+							onCreate = { kind -> editor = TaskEditor.Create(kind) },
+							onSeed = store::seedExamples,
+						)
+					} else {
+						TaskList(
+							kind = TaskKind.INCOME,
+							title = stringResource(R.string.list_income),
+							occurrences = currentView.income,
+							totalCents = currentView.summary.incomeTotalCents,
+							today = today,
+							onToggle = { store.setOccurrenceDone(it.templateId, currentMonth, !it.done) },
+							onEdit = { editor = openEditor(state.templates, it) ?: editor },
+						)
+
+						TaskList(
+							kind = TaskKind.EXPENSE,
+							title = stringResource(R.string.list_expense),
+							occurrences = currentView.expense,
+							totalCents = currentView.summary.expenseTotalCents,
+							today = today,
+							onToggle = { store.setOccurrenceDone(it.templateId, currentMonth, !it.done) },
+							onEdit = { editor = openEditor(state.templates, it) ?: editor },
+						)
+
+						// Espaço final para não sobrepor o botão flutuante
+						Spacer(modifier = Modifier.padding(bottom = 72.dp))
+					}
+				}
 			}
+		}
+
+		// Botão flutuante único no canto inferior direito
+		FloatingActionButton(
+			onClick = { editor = TaskEditor.Create(TaskKind.EXPENSE) },
+			containerColor = colors.ink,
+			contentColor = colors.foam,
+			shape = CircleShape,
+			modifier = Modifier
+				.align(Alignment.BottomEnd)
+				.padding(24.dp),
+		) {
+			Icon(
+				imageVector = Icons.Filled.Add,
+				contentDescription = stringResource(R.string.new_expense),
+				modifier = Modifier.size(24.dp),
+			)
 		}
 	}
 
