@@ -1,5 +1,6 @@
 package com.simplesfinancas.app
 
+import com.simplesfinancas.app.auth.Pbkdf2PasswordHasher
 import com.simplesfinancas.app.domain.FinanceState
 import com.simplesfinancas.app.domain.OccurrenceState
 import com.simplesfinancas.app.domain.Recurrence
@@ -13,6 +14,7 @@ import com.simplesfinancas.app.lib.clampDay
 import com.simplesfinancas.app.lib.formatBRL
 import com.simplesfinancas.app.lib.formatMonthLabel
 import com.simplesfinancas.app.lib.parseAmountToCents
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -165,5 +167,16 @@ class ParityTest {
 		// `explicitNulls = false` reproduz o `delete` do web: sem ajuste, sem campo.
 		assertFalse(json.contains("amountCents\":null"))
 		assertEquals(state, AppJson.decodeFromString<FinanceState>(json))
+	}
+
+	@Test
+	fun `senha confere pelo digest e recusa a errada`() = runBlocking {
+		val hasher = Pbkdf2PasswordHasher()
+		val digest = hasher.hash("segredo123")
+
+		assertEquals("PBKDF2-SHA256", digest.algorithm)
+		assertEquals(210_000, digest.iterations)
+		assertTrue(hasher.verify("segredo123", digest))
+		assertFalse(hasher.verify("segredo124", digest))
 	}
 }
